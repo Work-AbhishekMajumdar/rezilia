@@ -1,0 +1,97 @@
+{
+  "name": "rezilia",
+  "version": "0.1.0",
+  "description": "🛡️ The ultimate backend resilience toolkit — Smart Cache (stampede prevention), Smart Logger (async context), Smart Retry (circuit breaker). Works with npm, yarn, pnpm, and bun.",
+  "author": "Abhishek Majumdar <abhishek.majumdar@buildambit.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/abhishek-majumdar/rezilia#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhishek-majumdar/rezilia.git"
+  },
+  "bugs": {
+    "url": "https://github.com/abhishek-majumdar/rezilia/issues"
+  },
+  "keywords": [
+    "cache",
+    "stampede",
+    "singleflight",
+    "logger",
+    "retry",
+    "circuit-breaker",
+    "backend",
+    "resilience",
+    "async-context",
+    "rate-limit",
+    "exponential-backoff",
+    "typescript",
+    "nodejs",
+    "bun"
+  ],
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./cache": {
+      "types": "./dist/cache/index.d.ts",
+      "import": "./dist/esm/cache/index.js",
+      "require": "./dist/cjs/cache/index.js"
+    },
+    "./logger": {
+      "types": "./dist/logger/index.d.ts",
+      "import": "./dist/esm/logger/index.js",
+      "require": "./dist/cjs/logger/index.js"
+    },
+    "./retry": {
+      "types": "./dist/retry/index.d.ts",
+      "import": "./dist/esm/retry/index.js",
+      "require": "./dist/cjs/retry/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run test && npm run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "ioredis": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
