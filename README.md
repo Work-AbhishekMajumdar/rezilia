@@ -3,7 +3,7 @@
 > The ultimate backend resilience toolkit for Node.js — Cache Stampede Prevention, Async-Context Logger, and Circuit Breaker Retry in one package.
 
 [![npm version](https://img.shields.io/npm/v/rezilia.svg)](https://www.npmjs.com/package/rezilia)
-[![CI](https://github.com/abhishek-majumdar/rezilia/actions/workflows/ci.yml/badge.svg)](https://github.com/abhishek-majumdar/rezilia/actions)
+[![CI](https://github.com/Work-AbhishekMajumdar/rezilia/actions/workflows/ci.yml/badge.svg)](https://github.com/Work-AbhishekMajumdar/rezilia/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://www.typescriptlang.org/)
 
@@ -223,4 +223,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). PRs are welcome!
 
 ## License
 
-[MIT](LICENSE) © 2026 [Abhishek Majumdar](https://github.com/abhishek-majumdar)
+[MIT](LICENSE) © 2026 [Abhishek Majumdar](https://github.com/Work-AbhishekMajumdar)
