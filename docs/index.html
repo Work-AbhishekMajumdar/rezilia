@@ -1,327 +1,1114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>rezilia — Backend Resilience Toolkit</title>
-<meta name="description" content="Singleflight cache stampede prevention, async-context logger, and circuit breaker retry. Zero dependencies. Full TypeScript.">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<title>rezilia</title>
+<meta name="description" content="Zero-dependency Node.js resilience toolkit. Singleflight cache stampede prevention, async-context logging, and circuit breaker retry.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+/* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  --bg:#F7F9FC;--bg-alt:#ECEEF5;--surface:#FFFFFF;--border:#DDE3EE;
-  --text:#0D1525;--muted:#5A6A85;--accent:#0D9B7A;--accent-glow:#0D9B7A22;
-  --teal:#0D9B7A;--amber:#C97A10;--coral:#D45740;
-  --code-bg:#F0F3F9;--code-text:#0D1525;--pill-bg:#E4F4EF;--pill-text:#0D7A60;--nav-h:56px;
+  --bg: #111;
+  --sidebar-bg: #111;
+  --border: #222;
+  --text: #ededed;
+  --muted: #888;
+  --muted2: #555;
+  --surface: #1a1a1a;
+  --accent: #e879f9;
+  --accent-dim: #7c3aed33;
+  --code-bg: #1a1a1a;
+  --code-text: #d4d4d4;
+  --sidebar-w: 220px;
+  --right-w: 200px;
+
+  /* syntax */
+  --syn-keyword: #e879f9;
+  --syn-string: #86efac;
+  --syn-number: #fca5a5;
+  --syn-fn: #93c5fd;
+  --syn-comment: #555;
+  --syn-class: #fcd34d;
+  --syn-type: #67e8f9;
 }
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0B0F19;--bg-alt:#0F1522;--surface:#131929;--border:#1E2A42;
-  --text:#E8EDF7;--muted:#7A8BA8;--accent:#22D9B0;--accent-glow:#22D9B020;
-  --teal:#22D9B0;--amber:#F4A53A;--coral:#F47055;
-  --code-bg:#0D1422;--code-text:#CBD5E8;--pill-bg:#0D2A22;--pill-text:#22D9B0;
-}}
-:root[data-theme="dark"]{
-  --bg:#0B0F19;--bg-alt:#0F1522;--surface:#131929;--border:#1E2A42;
-  --text:#E8EDF7;--muted:#7A8BA8;--accent:#22D9B0;--accent-glow:#22D9B020;
-  --teal:#22D9B0;--amber:#F4A53A;--coral:#F47055;
-  --code-bg:#0D1422;--code-text:#CBD5E8;--pill-bg:#0D2A22;--pill-text:#22D9B0;
+[data-theme="light"] {
+  --bg: #fff;
+  --sidebar-bg: #f9f9f9;
+  --border: #e5e5e5;
+  --text: #111;
+  --muted: #666;
+  --muted2: #aaa;
+  --surface: #f3f3f3;
+  --accent: #a21caf;
+  --accent-dim: #a21caf18;
+  --code-bg: #f5f5f5;
+  --code-text: #1f2937;
+  --syn-keyword: #a21caf;
+  --syn-string: #16a34a;
+  --syn-number: #dc2626;
+  --syn-fn: #1d4ed8;
+  --syn-comment: #9ca3af;
+  --syn-class: #92400e;
+  --syn-type: #0e7490;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 16px)}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
-nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:0}
-.nav-brand{font-family:'DM Sans',sans-serif;font-weight:600;font-size:17px;color:var(--text);letter-spacing:-0.3px;margin-right:auto;display:flex;align-items:center;gap:8px}
-.nav-brand .shield{color:var(--accent);font-size:20px}
-.nav-links{display:flex;gap:4px;list-style:none}
-.nav-links a{font-size:14px;font-weight:400;color:var(--muted);padding:6px 12px;border-radius:6px;transition:color .15s,background .15s}
-.nav-links a:hover{color:var(--text);background:var(--bg-alt);text-decoration:none}
-.nav-github{margin-left:8px;font-size:13px;font-weight:500;color:var(--text);background:var(--bg-alt);border:1px solid var(--border);padding:5px 14px;border-radius:6px;transition:border-color .15s}
-.nav-github:hover{border-color:var(--accent);text-decoration:none}
-.theme-btn{margin-left:8px;background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:6px;font-size:15px;line-height:1;transition:border-color .15s,color .15s}
-.theme-btn:hover{border-color:var(--accent);color:var(--accent)}
-.container{max-width:760px;margin:0 auto;padding:0 24px}
-.hero{padding:80px 24px 72px;max-width:760px;margin:0 auto}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--pill-text);background:var(--pill-bg);padding:4px 10px;border-radius:4px;margin-bottom:24px}
-.hero h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(38px,6vw,60px);font-weight:300;line-height:1.1;letter-spacing:-1.5px;color:var(--text);text-wrap:balance;margin-bottom:20px}
-.hero h1 em{font-style:italic;color:var(--accent)}
-.hero-sub{font-size:18px;color:var(--muted);max-width:560px;margin-bottom:40px;line-height:1.6;font-weight:300}
-.badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px}
-.badges img{height:20px;border-radius:3px}
-.install-block{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;max-width:560px}
-.install-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 4px}
-.install-tab{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
-.install-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.install-tab:hover:not(.active){color:var(--text)}
-.install-pane{display:none;padding:14px 16px;align-items:center;gap:10px}
-.install-pane.active{display:flex}
-.install-pane code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--code-text);flex:1}
-.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;padding:4px 10px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap}
-.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
-.copy-btn.copied{color:var(--accent);border-color:var(--accent)}
-.section{padding:56px 0}
-.section+.section{border-top:1px solid var(--border)}
-.section-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-.section h2{font-size:26px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px;text-wrap:balance}
-.section-intro{color:var(--muted);margin-bottom:32px;max-width:540px}
-.problem-grid{display:grid;grid-template-columns:1fr;gap:12px}
-.problem-card{display:grid;grid-template-columns:3fr 4fr;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.problem-left{padding:20px;border-right:1px solid var(--border)}
-.problem-right{padding:20px;background:var(--bg-alt)}
-.problem-title{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text)}
-.problem-desc{font-size:13px;color:var(--muted);line-height:1.5}
-.solution-badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:6px}
-.solution-desc{font-size:13px;color:var(--muted);line-height:1.5}
-.mod-cache .solution-badge{background:#0D9B7A22;color:var(--teal)}
-.mod-logger .solution-badge{background:#C97A1022;color:var(--amber)}
-.mod-retry .solution-badge{background:#D4574022;color:var(--coral)}
-.module-section{padding:56px 0;border-top:1px solid var(--border)}
-.module-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:32px}
-.module-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-top:2px}
-.mod-cache .module-icon{background:#0D9B7A15}
-.mod-logger .module-icon{background:#C97A1015}
-.mod-retry .module-icon{background:#D4574015}
-.module-heading h2{font-size:22px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
-.module-heading p{font-size:14px;color:var(--muted);max-width:480px;line-height:1.5}
-.module-section.mod-cache{border-left:3px solid var(--teal);padding-left:24px}
-.module-section.mod-logger{border-left:3px solid var(--amber);padding-left:24px}
-.module-section.mod-retry{border-left:3px solid var(--coral);padding-left:24px}
-.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:20px 0}
-.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border)}
-.code-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
-.code-body{padding:16px;overflow-x:auto}
-pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.65;color:var(--code-text);white-space:pre}
-.kw{color:#C084FC}.str{color:#86EFAC}.num{color:#FCA5A5}.fn{color:#93C5FD}.cm{color:var(--muted);font-style:italic}.op{color:var(--muted)}.cls{color:#FCD34D}
-@media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .kw{color:#7C3AED}:root:not([data-theme="dark"]) .str{color:#16A34A}:root:not([data-theme="dark"]) .num{color:#DC2626}:root:not([data-theme="dark"]) .fn{color:#1D4ED8}:root:not([data-theme="dark"]) .cls{color:#92400E}}
-:root[data-theme="light"] .kw{color:#7C3AED}:root[data-theme="light"] .str{color:#16A34A}:root[data-theme="light"] .num{color:#DC2626}:root[data-theme="light"] .fn{color:#1D4ED8}:root[data-theme="light"] .cls{color:#92400E}
-.circuit-diagram{display:flex;align-items:center;padding:24px 0;overflow-x:auto}
-.circuit-state{display:flex;flex-direction:column;align-items:center;gap:6px}
-.state-circle{width:72px;height:72px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.04em;text-align:center;line-height:1.3}
-.state-closed{border-color:var(--teal);color:var(--teal);background:var(--accent-glow)}
-.state-open{border-color:var(--coral);color:var(--coral);background:#D4574015}
-.state-half{border-color:var(--amber);color:var(--amber);background:#C97A1015}
-.state-label{font-size:10px;color:var(--muted);font-weight:500;text-align:center;max-width:80px;line-height:1.3}
-.circuit-arrow{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px;min-width:80px}
-.arrow-label{font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;line-height:1.3}
-.arrow-line{width:100%;height:1px;background:var(--border);position:relative}
-.arrow-line::after{content:'›';position:absolute;right:-4px;top:-9px;color:var(--muted);font-size:14px}
-.compare-wrap{overflow-x:auto;margin-top:28px}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:middle}
-td:first-child{color:var(--text);font-weight:500}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg-alt)}
-.check{color:var(--teal);font-size:16px}.cross{color:var(--border);font-size:16px}.partial{color:var(--amber);font-size:13px;font-weight:500}
-.highlight-col{background:var(--accent-glow)!important}
-.req-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
-.req-card{border:1px solid var(--border);border-radius:8px;padding:16px 20px}
-.req-runtime{font-size:13px;font-weight:600;margin-bottom:4px}
-.req-version{font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace}
-footer{border-top:1px solid var(--border);padding:40px 24px;margin-top:40px}
-.footer-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.footer-brand{font-weight:600;font-size:15px}
-.footer-brand .shield{color:var(--accent)}
-.footer-links{display:flex;gap:20px}
-.footer-links a{font-size:13px;color:var(--muted)}
-.footer-links a:hover{color:var(--text);text-decoration:none}
-.footer-copy{font-size:12px;color:var(--muted);width:100%;text-align:right}
-@media(max-width:600px){.nav-links{display:none}.problem-card{grid-template-columns:1fr}.problem-left{border-right:none;border-bottom:1px solid var(--border)}.req-grid{grid-template-columns:1fr 1fr}.module-section{padding-left:16px!important}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* ── Layout: 3-column grid ──────────────────────────────── */
+#shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
+  min-height: 100vh;
+}
+
+/* ── Left sidebar ───────────────────────────────────────── */
+#sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.sidebar-top {
+  padding: 20px 16px 0;
+  flex-shrink: 0;
+}
+.logo-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.logo-name {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 5px;
+}
+.logo-icon { font-size: 18px; }
+.ver-badge {
+  font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  background: var(--border);
+  padding: 2px 7px; border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.search-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: text;
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-bottom: 16px;
+  transition: border-color .15s;
+}
+.search-wrap:hover { border-color: var(--muted2); }
+.search-icon { opacity: .5; font-style: normal; flex-shrink: 0; }
+.search-placeholder { flex: 1; }
+.search-kbds { display: flex; gap: 2px; }
+.search-kbds kbd {
+  background: var(--border); color: var(--muted);
+  font-size: 10px; padding: 1px 4px; border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* nav sections */
+.nav-items { flex: 1; padding: 0 0 80px; }
+.nav-section { margin-bottom: 4px; }
+.nav-section-title {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 12px 16px 4px;
+}
+.nav-link {
+  display: block;
+  padding: 4px 16px;
+  font-size: 13.5px; color: var(--muted);
+  border-left: 2px solid transparent;
+  transition: color .1s, background .1s;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.nav-link:hover { color: var(--text); }
+.nav-link.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
+  font-weight: 500;
+}
+.nav-link.sub { padding-left: 28px; font-size: 13px; }
+
+/* sidebar footer */
+.sidebar-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  display: flex; align-items: center; gap: 8px;
+}
+.footer-link {
+  color: var(--muted); font-size: 13px;
+  padding: 4px; border-radius: 4px;
+  transition: color .12s;
+  display: flex; align-items: center;
+}
+.footer-link:hover { color: var(--text); }
+.theme-btn {
+  margin-left: auto;
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer;
+  padding: 4px 8px; border-radius: 5px; font-size: 13px;
+  transition: border-color .12s, color .12s;
+  line-height: 1;
+}
+.theme-btn:hover { border-color: var(--muted2); color: var(--text); }
+
+/* ── Main content ───────────────────────────────────────── */
+#main {
+  grid-column: 2;
+  padding: 48px 56px 80px;
+  min-width: 0;
+  max-width: 800px;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+/* typography */
+h1.page-title {
+  font-size: 38px; font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  line-height: 1.15;
+}
+h2.h2 {
+  font-size: 22px; font-weight: 600;
+  letter-spacing: -.3px;
+  margin: 40px 0 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 24px;
+}
+h3.h3 {
+  font-size: 16px; font-weight: 600;
+  margin: 28px 0 8px;
+  scroll-margin-top: 24px;
+}
+p { margin-bottom: 14px; }
+p a { color: var(--accent); }
+p a:hover { text-decoration: underline; }
+ul, ol { padding-left: 20px; margin-bottom: 14px; }
+li { margin-bottom: 4px; }
+strong { font-weight: 600; }
+code.ic {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1px 5px; border-radius: 4px;
+  color: var(--code-text);
+}
+hr.rule { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+/* badges row */
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 24px; }
+.badges img { height: 18px; }
+
+/* links row */
+.link-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; font-size: 13.5px; }
+.link-row a { color: var(--accent); }
+.link-row a:hover { text-decoration: underline; }
+
+/* install box */
+.install-box {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+.install-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.itab {
+  background: none; border: none;
+  font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 500;
+  color: var(--muted); padding: 8px 14px; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .1s, border-color .1s;
+}
+.itab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.itab:hover:not(.active) { color: var(--text); }
+.ipane { display: none; padding: 12px 16px; align-items: center; gap: 10px; }
+.ipane.active { display: flex; }
+.ipane code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--code-text); flex: 1; }
+.cp-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  cursor: pointer; padding: 3px 9px; border-radius: 5px;
+  font-size: 11.5px; font-weight: 500; font-family: 'Inter', sans-serif;
+  transition: all .1s; white-space: nowrap;
+}
+.cp-btn:hover { border-color: var(--muted2); color: var(--text); }
+.cp-btn.ok { color: var(--accent); border-color: var(--accent); }
+
+/* ── Code blocks ─────────────────────────────────────────── */
+.cb {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+  font-size: 0; /* kill whitespace */
+}
+.cb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px;
+}
+.cb-lang { color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.cb-copy {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  cursor: pointer; padding: 2px 8px; border-radius: 4px; font-size: 11px;
+  font-family: 'Inter', sans-serif; transition: all .1s;
+}
+.cb-copy:hover { border-color: var(--muted2); color: var(--text); }
+.cb-copy.ok { color: var(--accent); border-color: var(--accent); }
+.cb-body {
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; line-height: 1.65;
+  color: var(--code-text);
+  white-space: pre;
+  tab-size: 2;
+}
+
+/* syntax tokens */
+.k  { color: var(--syn-keyword); }
+.s  { color: var(--syn-string); }
+.n  { color: var(--syn-number); }
+.f  { color: var(--syn-fn); }
+.c  { color: var(--syn-comment); font-style: italic; }
+.cl { color: var(--syn-class); }
+.t  { color: var(--syn-type); }
+
+/* ── Callouts ────────────────────────────────────────────── */
+.callout {
+  border: 1px solid var(--border);
+  border-left: 3px solid;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 20px 0;
+  font-size: 13.5px;
+}
+.callout.tip   { border-left-color: #10b981; background: #10b98108; }
+.callout.warn  { border-left-color: #f59e0b; background: #f59e0b08; }
+.callout.info  { border-left-color: var(--accent); background: var(--accent-dim); }
+.callout-title {
+  font-weight: 600; font-size: 13px; margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.callout.tip  .callout-title { color: #10b981; }
+.callout.warn .callout-title { color: #f59e0b; }
+.callout.info .callout-title { color: var(--accent); }
+
+/* feature grid */
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+.fcard {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 14px 16px; background: var(--surface);
+}
+.fcard-icon { font-size: 18px; margin-bottom: 6px; }
+.fcard-title { font-weight: 600; font-size: 13.5px; margin-bottom: 3px; }
+.fcard-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* comparison table */
+.table-wrap { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 14px; border: 1px solid var(--border); text-align: left; }
+th { background: var(--surface); font-weight: 600; }
+td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.yes { color: #10b981; }
+.no  { color: #f87171; }
+.par { color: #f59e0b; }
+
+/* circuit breaker states diagram */
+.states { display: flex; align-items: center; gap: 0; margin: 24px 0; overflow-x: auto; }
+.state-box {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  flex-shrink: 0;
+}
+.state-circle {
+  width: 64px; height: 64px; border-radius: 50%; border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; font-family: 'Inter', sans-serif;
+  text-align: center; letter-spacing: .02em;
+}
+.state-closed  { border-color: #10b981; color: #10b981; background: #10b98110; }
+.state-open    { border-color: #f87171; color: #f87171; background: #f8717110; }
+.state-half    { border-color: #f59e0b; color: #f59e0b; background: #f59e0b10; }
+.state-label   { font-size: 10px; color: var(--muted); }
+.state-arrow {
+  width: 44px; text-align: center; color: var(--muted); font-size: 11px;
+  flex-shrink: 0; padding: 0 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding-bottom: 20px;
+}
+.state-arrow-line { font-size: 16px; color: var(--border); }
+
+/* ── Right sidebar ───────────────────────────────────────── */
+#toc {
+  position: fixed;
+  top: 0; right: 0;
+  width: var(--right-w);
+  height: 100vh;
+  overflow-y: auto;
+  padding: 48px 20px 48px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.toc-title {
+  font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.toc-link {
+  display: block; font-size: 12.5px; color: var(--muted);
+  padding: 3px 0 3px 12px;
+  border-left: 2px solid transparent;
+  transition: color .1s, border-color .1s;
+  line-height: 1.5;
+}
+.toc-link:hover { color: var(--text); }
+.toc-link.active { color: var(--accent); border-left-color: var(--accent); }
+.toc-link.sub { padding-left: 22px; font-size: 12px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  #shell { grid-template-columns: var(--sidebar-w) 1fr; }
+  #toc { display: none; }
+}
+@media (max-width: 720px) {
+  #shell { grid-template-columns: 1fr; }
+  #sidebar { position: relative; width: 100%; height: auto; }
+  #main { padding: 24px 20px 60px; }
+}
 </style>
 </head>
 <body>
-<nav>
-  <div class="nav-brand"><span class="shield">🛡️</span> rezilia</div>
-  <ul class="nav-links">
-    <li><a href="#why">Why</a></li>
-    <li><a href="#cache">Cache</a></li>
-    <li><a href="#logger">Logger</a></li>
-    <li><a href="#retry">Retry</a></li>
-    <li><a href="#compare">Compare</a></li>
-  </ul>
-  <a class="nav-github" href="https://github.com/Work-AbhishekMajumdar/rezilia" target="_blank">GitHub ↗</a>
-  <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">◑</button>
-</nav>
 
-<div class="hero">
-  <div class="hero-eyebrow">⚡ v0.1.0 — MIT License</div>
-  <h1>Backend resilience,<br><em>finally packaged</em></h1>
-  <p class="hero-sub">Singleflight cache stampede prevention, async-context logger, and circuit breaker retry — in one zero-dependency TypeScript library.</p>
-  <div class="badges">
-    <img src="https://img.shields.io/npm/v/rezilia.svg?style=flat-square" alt="npm version">
-    <img src="https://img.shields.io/npm/dm/rezilia.svg?style=flat-square&color=22D9B0" alt="downloads">
-    <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="MIT">
-    <img src="https://img.shields.io/badge/TypeScript-5.4-blue.svg?style=flat-square" alt="TypeScript">
-    <img src="https://img.shields.io/badge/Node.js-%3E%3D18-brightgreen?style=flat-square" alt="Node.js">
-  </div>
-  <div class="install-block">
-    <div class="install-tabs">
-      <button class="install-tab active" onclick="switchTab('npm')">npm</button>
-      <button class="install-tab" onclick="switchTab('pnpm')">pnpm</button>
-      <button class="install-tab" onclick="switchTab('yarn')">yarn</button>
-      <button class="install-tab" onclick="switchTab('bun')">bun</button>
-    </div>
-    <div class="install-pane active" id="pane-npm"><code>npm install rezilia</code><button class="copy-btn" onclick="copyInstall(this,'npm install rezilia')">Copy</button></div>
-    <div class="install-pane" id="pane-pnpm"><code>pnpm add rezilia</code><button class="copy-btn" onclick="copyInstall(this,'pnpm add rezilia')">Copy</button></div>
-    <div class="install-pane" id="pane-yarn"><code>yarn add rezilia</code><button class="copy-btn" onclick="copyInstall(this,'yarn add rezilia')">Copy</button></div>
-    <div class="install-pane" id="pane-bun"><code>bun add rezilia</code><button class="copy-btn" onclick="copyInstall(this,'bun add rezilia')">Copy</button></div>
-  </div>
-</div>
+<div id="shell">
 
-<div class="container">
-  <section class="section" id="why">
-    <div class="section-label">The problem</div>
-    <h2>Three walls every Node.js backend hits</h2>
-    <p class="section-intro">These aren't edge cases — they're production failures waiting to happen. rezilia solves all three with zero config defaults.</p>
-    <div class="problem-grid">
-      <div class="problem-card mod-cache">
-        <div class="problem-left"><div class="problem-title">Cache Stampede</div><div class="problem-desc">When cache expires, 1,000 requests simultaneously hit the database. The DB can't cope. Everything goes down.</div></div>
-        <div class="problem-right"><div class="solution-badge">SmartCache</div><div class="solution-desc">Singleflight pattern — only 1 fetcher runs. All concurrent callers wait and share the same result. DB sees exactly 1 query.</div></div>
+  <!-- ── Left sidebar ──────────────────────────────────── -->
+  <nav id="sidebar">
+    <div class="sidebar-top">
+      <div class="logo-row">
+        <div class="logo-name"><span class="logo-icon">🛡️</span> rezilia</div>
+        <div class="ver-badge">v0.1.0</div>
       </div>
-      <div class="problem-card mod-logger">
-        <div class="problem-left"><div class="problem-title">Lost Log Context</div><div class="problem-desc">Request ID disappears across async/await. You can't trace a request through your logs. Debugging is guesswork.</div></div>
-        <div class="problem-right"><div class="solution-badge">SmartLogger</div><div class="solution-desc">AsyncLocalStorage propagates requestId automatically through the entire async call chain — no manual passing required.</div></div>
-      </div>
-      <div class="problem-card mod-retry">
-        <div class="problem-left"><div class="problem-title">Cascading Failures</div><div class="problem-desc">One slow external API stalls your thread pool. Retries hammer an already-failing service. Everything cascades.</div></div>
-        <div class="problem-right"><div class="solution-badge">SmartRetry</div><div class="solution-desc">Circuit breaker stops calling a failing service. Exponential backoff with jitter prevents thundering herd on recovery.</div></div>
+      <div class="search-wrap">
+        <i class="search-icon">⌕</i>
+        <span class="search-placeholder">Search docs…</span>
+        <div class="search-kbds"><kbd>Ctrl</kbd><kbd>K</kbd></div>
       </div>
     </div>
-  </section>
 
-  <section class="module-section mod-cache" id="cache">
-    <div class="module-header"><div class="module-icon">📦</div><div class="module-heading"><h2>SmartCache</h2><p>Singleflight + Stale-While-Revalidate + TTL jitter — the #1 missing primitive in the JS ecosystem.</p></div></div>
-    <div class="code-block">
-      <div class="code-header"><span class="code-filename">cache-example.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <div class="code-body"><pre><span class="kw">import</span> { <span class="cls">SmartCache</span> } <span class="kw">from</span> <span class="str">'rezilia/cache'</span>;
+    <div class="nav-items">
+      <div class="nav-section">
+        <div class="nav-section-title">Documentation</div>
+        <a class="nav-link active" onclick="show('intro')">Introduction</a>
+        <a class="nav-link" onclick="show('install')">Installation</a>
+        <a class="nav-link" onclick="show('quickstart')">Quick start</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">SmartCache</div>
+        <a class="nav-link" onclick="show('cache')">Overview</a>
+        <a class="nav-link sub" onclick="show('cache')">Singleflight</a>
+        <a class="nav-link sub" onclick="show('cache')">Stale-while-revalidate</a>
+        <a class="nav-link sub" onclick="show('cache')">TTL jitter</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">SmartLogger</div>
+        <a class="nav-link" onclick="show('logger')">Overview</a>
+        <a class="nav-link sub" onclick="show('logger')">Request context</a>
+        <a class="nav-link sub" onclick="show('logger')">Auto-redaction</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">SmartRetry</div>
+        <a class="nav-link" onclick="show('retry')">Overview</a>
+        <a class="nav-link sub" onclick="show('retry')">Circuit breaker</a>
+        <a class="nav-link sub" onclick="show('retry')">Exponential backoff</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Reference</div>
+        <a class="nav-link" onclick="show('api')">API reference</a>
+        <a class="nav-link" onclick="show('changelog')">Changelog</a>
+      </div>
+    </div>
 
-<span class="kw">const</span> cache <span class="op">=</span> <span class="kw">new</span> <span class="cls">SmartCache</span>({
-  defaultTtl: <span class="num">60_000</span>,           <span class="cm">// 1 minute</span>
-  jitterFactor: <span class="num">0.1</span>,            <span class="cm">// ±10% TTL — prevents mass expiry</span>
-  staleWhileRevalidate: <span class="kw">true</span>,   <span class="cm">// serve stale instantly while refreshing</span>
-  staleTtl: <span class="num">5_000</span>,
-});
+    <div class="sidebar-footer">
+      <a class="footer-link" href="https://github.com/Work-AbhishekMajumdar/rezilia" title="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+      <a class="footer-link" href="https://www.npmjs.com/package/rezilia" title="npm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0H0zm19.2 19.2H4.8V4.8h14.4v14.4zm-2.4-2.4H12v-9.6H7.2v9.6H4.8V7.2h12v9.6h-2.4v-2.4z"/></svg>
+      </a>
+      <button class="theme-btn" onclick="toggleTheme()">☀</button>
+    </div>
+  </nav>
 
-<span class="cm">// 100 concurrent callers → fetcher runs exactly ONCE</span>
-<span class="kw">const</span> results <span class="op">=</span> <span class="kw">await</span> <span class="cls">Promise</span>.<span class="fn">all</span>(
-  <span class="cls">Array</span>.<span class="fn">from</span>({ length: <span class="num">100</span> }, () <span class="op">=&gt;</span> cache.<span class="fn">get</span>(<span class="str">'user:42'</span>, () <span class="op">=&gt;</span> db.<span class="fn">findUser</span>(<span class="num">42</span>)))
+  <!-- ── Main content ───────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Introduction page -->
+    <div class="page active" id="page-intro">
+      <h1 class="page-title">rezilia</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:16px;">Zero-dependency Node.js resilience toolkit for production backends.</p>
+
+      <div class="badges">
+        <img src="https://img.shields.io/npm/v/rezilia?style=flat-square&color=e879f9&labelColor=1a1a1a" alt="npm">
+        <img src="https://img.shields.io/bundlephobia/min/rezilia?style=flat-square&color=10b981&labelColor=1a1a1a" alt="size">
+        <img src="https://img.shields.io/badge/zero%20deps-✓-10b981?style=flat-square&labelColor=1a1a1a" alt="zero deps">
+        <img src="https://img.shields.io/badge/TypeScript-5.0%2B-93c5fd?style=flat-square&labelColor=1a1a1a" alt="TypeScript">
+        <img src="https://img.shields.io/badge/Node.js-%3E%3D18-brightgreen?style=flat-square&labelColor=1a1a1a" alt="Node.js">
+      </div>
+
+      <div class="link-row">
+        <a href="https://github.com/Work-AbhishekMajumdar/rezilia">GitHub</a>
+        <a href="https://www.npmjs.com/package/rezilia">npm</a>
+        <a href="#" onclick="show('install');return false">Get started →</a>
+      </div>
+
+      <hr class="rule">
+
+      <h2 class="h2" id="intro-intro">Introduction</h2>
+      <p>
+        rezilia packages three production-hardened resilience patterns into a single zero-dependency
+        TypeScript library. If you've ever been paged because a cache key expired at the wrong moment,
+        lost a <code class="ic">requestId</code> somewhere deep in an async chain, or watched your service
+        hammer a dead dependency — this is the toolkit for you.
+      </p>
+
+      <h2 class="h2" id="intro-features">Features</h2>
+      <div class="fgrid">
+        <div class="fcard">
+          <div class="fcard-icon">🛡️</div>
+          <div class="fcard-title">Cache stampede prevention</div>
+          <div class="fcard-desc">Singleflight ensures only 1 fetcher runs per key. 1,000 concurrent callers share one result.</div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-icon">📝</div>
+          <div class="fcard-title">Async context logging</div>
+          <div class="fcard-desc">AsyncLocalStorage propagates requestId through every async hop — zero manual passing.</div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-icon">⚡</div>
+          <div class="fcard-title">Circuit breaker</div>
+          <div class="fcard-desc">Opens after N failures, half-opens to probe recovery. Fail-fast protects downstream services.</div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-icon">📦</div>
+          <div class="fcard-title">Zero dependencies</div>
+          <div class="fcard-desc">No runtime deps. Full TypeScript. ESM + CJS + Bun support out of the box.</div>
+        </div>
+      </div>
+
+      <h2 class="h2" id="intro-install">Installation</h2>
+      <div class="install-box">
+        <div class="install-tabs">
+          <button class="itab active" onclick="tab(this,'ip-npm')">npm</button>
+          <button class="itab" onclick="tab(this,'ip-pnpm')">pnpm</button>
+          <button class="itab" onclick="tab(this,'ip-yarn')">yarn</button>
+          <button class="itab" onclick="tab(this,'ip-bun')">bun</button>
+        </div>
+        <div class="ipane active" id="ip-npm"><code>npm install rezilia</code><button class="cp-btn" onclick="cp(this,'npm install rezilia')">Copy</button></div>
+        <div class="ipane" id="ip-pnpm"><code>pnpm add rezilia</code><button class="cp-btn" onclick="cp(this,'pnpm add rezilia')">Copy</button></div>
+        <div class="ipane" id="ip-yarn"><code>yarn add rezilia</code><button class="cp-btn" onclick="cp(this,'yarn add rezilia')">Copy</button></div>
+        <div class="ipane" id="ip-bun"><code>bun add rezilia</code><button class="cp-btn" onclick="cp(this,'bun add rezilia')">Copy</button></div>
+      </div>
+
+      <h2 class="h2" id="intro-requirements">Requirements</h2>
+      <ul>
+        <li>Node.js <code class="ic">≥ 18.0.0</code> (for <code class="ic">AsyncLocalStorage</code>)</li>
+        <li>TypeScript <code class="ic">≥ 5.0</code> (if using TypeScript)</li>
+        <li>Bun <code class="ic">≥ 1.0</code> (if using Bun)</li>
+      </ul>
+
+      <h2 class="h2" id="intro-modules">Modules</h2>
+      <p>rezilia ships three independent modules. Import only what you need:</p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c">// Cache stampede prevention</span>
+<span class="k">import</span> { SmartCache } <span class="k">from</span> <span class="s">'rezilia/cache'</span>;
+
+<span class="c">// Structured async logging</span>
+<span class="k">import</span> { SmartLogger } <span class="k">from</span> <span class="s">'rezilia/logger'</span>;
+
+<span class="c">// Circuit breaker + retry</span>
+<span class="k">import</span> { SmartRetry } <span class="k">from</span> <span class="s">'rezilia/retry'</span>;
+
+<span class="c">// Or everything at once</span>
+<span class="k">import</span> { SmartCache, SmartLogger, SmartRetry } <span class="k">from</span> <span class="s">'rezilia'</span>;</pre></div></div>
+    </div>
+
+    <!-- SmartCache page -->
+    <div class="page" id="page-cache">
+      <h1 class="page-title">SmartCache</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">Singleflight + stale-while-revalidate + TTL jitter. No DB meltdowns.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="cache-problem">The problem</h2>
+      <p>
+        A cache key expires during a traffic spike. Every in-flight request sees a miss and fires a
+        database query simultaneously. This is a <strong>cache stampede</strong> (thundering herd).
+        With a 2.8-second query and 1,000 concurrent requests — your DB chokes.
+      </p>
+      <div class="callout warn">
+        <div class="callout-title">⚠ What happens without singleflight</div>
+        Cache expires → 1,000 requests miss → 1,000 DB queries fire → DB chokes → timeouts cascade → incident.
+      </div>
+
+      <h2 class="h2" id="cache-singleflight">Singleflight</h2>
+      <p>
+        When a key is being fetched, all subsequent callers for that key wait and share the single result.
+        Only <strong>one fetcher runs</strong> per key, no matter how many callers arrive.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartCache</span> } <span class="k">from</span> <span class="s">'rezilia/cache'</span>;
+
+<span class="k">const</span> cache = <span class="k">new</span> <span class="cl">SmartCache</span>({ defaultTtl: <span class="n">60_000</span> });
+
+<span class="c">// 1,000 concurrent calls → fetcher runs exactly ONCE</span>
+<span class="k">const</span> results = <span class="k">await</span> <span class="cl">Promise</span>.<span class="f">all</span>(
+  <span class="cl">Array</span>.<span class="f">from</span>({ length: <span class="n">1000</span> }, () =>
+    cache.<span class="f">get</span>(<span class="s">'user:42'</span>, () => db.<span class="f">findUser</span>(<span class="n">42</span>))
+  )
 );
-<span class="cm">// db.findUser called: 1 time ✓</span>
+<span class="c">// All 1,000 get the same result. DB query ran once.</span></pre></div></div>
 
-<span class="cm">// Redis store (optional — npm install ioredis)</span>
-<span class="kw">import</span> { <span class="cls">RedisStore</span> } <span class="kw">from</span> <span class="str">'rezilia/cache'</span>;
-<span class="kw">import</span> <span class="cls">Redis</span> <span class="kw">from</span> <span class="str">'ioredis'</span>;
-<span class="kw">const</span> redisCache <span class="op">=</span> <span class="kw">new</span> <span class="cls">SmartCache</span>({ store: <span class="kw">new</span> <span class="cls">RedisStore</span>(<span class="kw">new</span> <span class="cls">Redis</span>()) });</pre></div>
-    </div>
-  </section>
-
-  <section class="module-section mod-logger" id="logger">
-    <div class="module-header"><div class="module-icon">📝</div><div class="module-heading"><h2>SmartLogger</h2><p>Structured JSON logs with automatic requestId propagation through every async boundary. Auto-redacts secrets.</p></div></div>
-    <div class="code-block">
-      <div class="code-header"><span class="code-filename">logger-example.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <div class="code-body"><pre><span class="kw">import</span> { <span class="cls">SmartLogger</span>, <span class="cls">requestLogger</span> } <span class="kw">from</span> <span class="str">'rezilia/logger'</span>;
-
-<span class="kw">const</span> logger <span class="op">=</span> <span class="kw">new</span> <span class="cls">SmartLogger</span>({ serviceName: <span class="str">'api'</span>, level: <span class="str">'info'</span> });
-
-<span class="cm">// requestId flows automatically — no manual passing</span>
-logger.<span class="fn">runWithContext</span>({ requestId: req.id }, <span class="kw">async</span> () <span class="op">=&gt;</span> {
-  logger.<span class="fn">info</span>(<span class="str">'Processing payment'</span>);  <span class="cm">// → requestId included ✓</span>
-  <span class="kw">await</span> <span class="fn">processPayment</span>();
-  logger.<span class="fn">info</span>(<span class="str">'Payment done'</span>);        <span class="cm">// → requestId still here ✓</span>
+      <h2 class="h2" id="cache-swr">Stale-while-revalidate</h2>
+      <p>
+        Serve the stale cached value <em>instantly</em> while refreshing in the background.
+        Users never see a slow response during revalidation.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">const</span> cache = <span class="k">new</span> <span class="cl">SmartCache</span>({
+  defaultTtl: <span class="n">60_000</span>,
+  staleWhileRevalidate: <span class="k">true</span>,   <span class="c">// serve stale, refresh async</span>
+  jitterFactor: <span class="n">0.1</span>,             <span class="c">// ±10% TTL randomness</span>
 });
 
-<span class="cm">// Auto-redaction — password never leaks</span>
-logger.<span class="fn">info</span>(<span class="str">'Login'</span>, { username: <span class="str">'alice'</span>, password: <span class="str">'secret'</span> });
-<span class="cm">// → {"data":{"username":"alice","password":"[REDACTED]"}}</span>
+<span class="k">const</span> user = <span class="k">await</span> cache.<span class="f">get</span>(<span class="s">'user:42'</span>, () => db.<span class="f">findUser</span>(<span class="n">42</span>));
+<span class="c">// Returns stale value in &lt;1ms. Refresh happens in background.</span></pre></div></div>
 
-app.<span class="fn">use</span>(<span class="fn">requestLogger</span>(logger)); <span class="cm">// Express middleware</span></pre></div>
-    </div>
-  </section>
-
-  <section class="module-section mod-retry" id="retry">
-    <div class="module-header"><div class="module-icon">🔄</div><div class="module-heading"><h2>SmartRetry</h2><p>Exponential backoff with jitter, per-attempt timeouts, and an integrated circuit breaker.</p></div></div>
-    <div class="circuit-diagram">
-      <div class="circuit-state"><div class="state-circle state-closed">CLOSED</div><div class="state-label">Requests flow normally</div></div>
-      <div class="circuit-arrow"><div class="arrow-label">5 failures</div><div class="arrow-line"></div></div>
-      <div class="circuit-state"><div class="state-circle state-open">OPEN</div><div class="state-label">Fail fast — no upstream calls</div></div>
-      <div class="circuit-arrow"><div class="arrow-label">30s timeout</div><div class="arrow-line"></div></div>
-      <div class="circuit-state"><div class="state-circle state-half">HALF<br>OPEN</div><div class="state-label">Probe with limited requests</div></div>
-      <div class="circuit-arrow"><div class="arrow-label">2 successes</div><div class="arrow-line"></div></div>
-      <div class="circuit-state"><div class="state-circle state-closed">CLOSED</div><div class="state-label">Fully recovered</div></div>
-    </div>
-    <div class="code-block">
-      <div class="code-header"><span class="code-filename">retry-example.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-      <div class="code-body"><pre><span class="kw">import</span> { <span class="cls">SmartRetry</span>, <span class="fn">retry</span> } <span class="kw">from</span> <span class="str">'rezilia/retry'</span>;
-
-<span class="cm">// One-liner</span>
-<span class="kw">const</span> data <span class="op">=</span> <span class="kw">await</span> <span class="fn">retry</span>(() <span class="op">=&gt;</span> api.<span class="fn">getData</span>(), { attempts: <span class="num">3</span>, baseDelay: <span class="num">500</span> });
-
-<span class="cm">// Full control with circuit breaker</span>
-<span class="kw">const</span> retrier <span class="op">=</span> <span class="kw">new</span> <span class="cls">SmartRetry</span>({
-  attempts: <span class="num">5</span>,
-  baseDelay: <span class="num">500</span>,     <span class="cm">// 500 → 1000 → 2000 → 4000ms</span>
-  maxDelay: <span class="num">30_000</span>,
-  jitter: <span class="num">0.2</span>,        <span class="cm">// ±20% — prevents thundering herd</span>
-  timeout: <span class="num">10_000</span>,    <span class="cm">// per-attempt timeout</span>
-  circuitBreaker: { threshold: <span class="num">5</span>, resetAfter: <span class="num">30_000</span>, halfOpenSuccesses: <span class="num">2</span> },
+      <h2 class="h2" id="cache-jitter">TTL jitter</h2>
+      <p>
+        Without jitter, all keys set at the same time expire at the same time — causing a
+        mass simultaneous expiry spike. <code class="ic">jitterFactor</code> adds randomness to spread
+        expiration across a window.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c">// TTL of 60s with 10% jitter → actual TTL: 54s–66s</span>
+<span class="k">const</span> cache = <span class="k">new</span> <span class="cl">SmartCache</span>({
+  defaultTtl: <span class="n">60_000</span>,
+  jitterFactor: <span class="n">0.1</span>,
 });
 
-<span class="kw">const</span> result <span class="op">=</span> <span class="kw">await</span> retrier.<span class="fn">execute</span>(() <span class="op">=&gt;</span> paymentGateway.<span class="fn">charge</span>(order));
-console.<span class="fn">log</span>(retrier.circuitState); <span class="cm">// 'CLOSED' | 'OPEN' | 'HALF_OPEN'</span></pre></div>
-    </div>
-  </section>
+<span class="c">// Per-key TTL override</span>
+<span class="k">await</span> cache.<span class="f">set</span>(<span class="s">'session:xyz'</span>, data, <span class="n">300_000</span>);
 
-  <section class="section" id="compare">
-    <div class="section-label">Comparison</div>
-    <h2>Why not X?</h2>
-    <p class="section-intro">rezilia fills gaps every other library leaves open.</p>
-    <div class="compare-wrap">
-      <table>
-        <thead><tr><th>Feature</th><th style="color:var(--accent)">rezilia</th><th>node-cache</th><th>winston</th><th>axios-retry</th></tr></thead>
+<span class="c">// Delete a key</span>
+cache.<span class="f">del</span>(<span class="s">'user:42'</span>);
+
+<span class="c">// Clear everything</span>
+cache.<span class="f">clear</span>();</pre></div></div>
+    </div>
+
+    <!-- SmartLogger page -->
+    <div class="page" id="page-logger">
+      <h1 class="page-title">SmartLogger</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">AsyncLocalStorage-based structured logging with automatic context propagation.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="logger-problem">The problem</h2>
+      <p>
+        You attach a <code class="ic">requestId</code> in Express middleware. You log it once. Then you call
+        an async helper — and it's gone. You end up threading it through every function signature.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c">// Without SmartLogger — requestId must be passed everywhere</span>
+<span class="k">function</span> <span class="f">handleRequest</span>(req, res) {
+  <span class="f">doThing</span>(req.id);
+}
+<span class="k">function</span> <span class="f">doThing</span>(requestId) {
+  <span class="f">doNestedThing</span>(requestId); <span class="c">// pass it again</span>
+}
+<span class="k">function</span> <span class="f">doNestedThing</span>(requestId) {
+  logger.<span class="f">info</span>(<span class="s">'...'</span>, { requestId }); <span class="c">// still passing</span>
+}</pre></div></div>
+
+      <h2 class="h2" id="logger-context">Request context</h2>
+      <p>
+        <code class="ic">SmartLogger</code> uses Node's <code class="ic">AsyncLocalStorage</code> to bind a
+        context to the current async execution tree. Any function called within the context —
+        regardless of nesting depth — automatically sees it.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartLogger</span>, requestLogger } <span class="k">from</span> <span class="s">'rezilia/logger'</span>;
+
+<span class="k">const</span> logger = <span class="k">new</span> <span class="cl">SmartLogger</span>({ serviceName: <span class="s">'api'</span> });
+
+<span class="c">// Middleware automatically injects requestId</span>
+app.<span class="f">use</span>(<span class="f">requestLogger</span>(logger));
+
+app.<span class="f">get</span>(<span class="s">'/users/:id'</span>, <span class="k">async</span> (req, res) => {
+  logger.<span class="f">info</span>(<span class="s">'Fetching user'</span>); <span class="c">// ✓ requestId here automatically</span>
+  <span class="k">const</span> user = <span class="k">await</span> db.<span class="f">getUser</span>(req.params.id);
+  logger.<span class="f">info</span>(<span class="s">'User fetched'</span>);  <span class="c">// ✓ still here through all async hops</span>
+  res.<span class="f">json</span>(user);
+});</pre></div></div>
+
+      <h2 class="h2" id="logger-redaction">Auto-redaction</h2>
+      <p>
+        SmartLogger automatically redacts sensitive fields before they reach your log sink.
+        No accidental leakage of tokens, passwords, or card numbers.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c">// Redacted by default: password, token, apiKey, cardNumber, secret, authorization</span>
+logger.<span class="f">info</span>(<span class="s">'Auth attempt'</span>, {
+  user: <span class="s">'alice'</span>,
+  password: <span class="s">'hunter2'</span>,   <span class="c">// → "[REDACTED]"</span>
+  token: <span class="s">'sk-abc123'</span>,    <span class="c">// → "[REDACTED]"</span>
+});
+
+<span class="c">// Add custom redacted fields</span>
+<span class="k">const</span> logger = <span class="k">new</span> <span class="cl">SmartLogger</span>({
+  serviceName: <span class="s">'payments'</span>,
+  redactedFields: [<span class="s">'ssn'</span>, <span class="s">'accountNumber'</span>],
+});</pre></div></div>
+    </div>
+
+    <!-- SmartRetry page -->
+    <div class="page" id="page-retry">
+      <h1 class="page-title">SmartRetry</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">Exponential backoff with jitter and an integrated circuit breaker state machine.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="retry-circuit">Circuit breaker</h2>
+      <p>
+        The circuit breaker prevents your service from hammering a dependency that's already down.
+        It transitions through three states:
+      </p>
+      <div class="states">
+        <div class="state-box">
+          <div class="state-circle state-closed">CLOSED</div>
+          <div class="state-label">Normal</div>
+        </div>
+        <div class="state-arrow">
+          <div style="font-size:10px;color:var(--muted)">N failures</div>
+          <div class="state-arrow-line">→</div>
+        </div>
+        <div class="state-box">
+          <div class="state-circle state-open">OPEN</div>
+          <div class="state-label">Fail fast</div>
+        </div>
+        <div class="state-arrow">
+          <div style="font-size:10px;color:var(--muted)">timeout</div>
+          <div class="state-arrow-line">→</div>
+        </div>
+        <div class="state-box">
+          <div class="state-circle state-half">HALF<br>OPEN</div>
+          <div class="state-label">Probe</div>
+        </div>
+        <div class="state-arrow">
+          <div style="font-size:10px;color:var(--muted)">success</div>
+          <div class="state-arrow-line">→</div>
+        </div>
+        <div class="state-box">
+          <div class="state-circle state-closed">CLOSED</div>
+          <div class="state-label">Recovered</div>
+        </div>
+      </div>
+
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartRetry</span> } <span class="k">from</span> <span class="s">'rezilia/retry'</span>;
+
+<span class="k">const</span> retrier = <span class="k">new</span> <span class="cl">SmartRetry</span>({
+  attempts: <span class="n">5</span>,
+  baseDelay: <span class="n">500</span>,   <span class="c">// doubles: 500 → 1000 → 2000 → 4000ms</span>
+  jitter: <span class="n">0.2</span>,      <span class="c">// prevents synchronized retries across instances</span>
+  timeout: <span class="n">10_000</span>, <span class="c">// per-attempt timeout</span>
+
+  circuitBreaker: {
+    threshold: <span class="n">5</span>,          <span class="c">// open after 5 consecutive failures</span>
+    resetAfter: <span class="n">30_000</span>,   <span class="c">// probe after 30s</span>
+    halfOpenSuccesses: <span class="n">2</span>,  <span class="c">// need 2 successes to close again</span>
+  },
+});
+
+<span class="k">const</span> result = <span class="k">await</span> retrier.<span class="f">execute</span>(() => paymentGateway.<span class="f">charge</span>(order));
+<span class="c">// Fails fast when OPEN — no waiting on dead service</span></pre></div></div>
+
+      <h2 class="h2" id="retry-backoff">Exponential backoff</h2>
+      <p>
+        Each retry waits longer than the last, with jitter to prevent synchronized thundering herds
+        from multiple service instances all retrying at the same moment.
+      </p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c">// Retry delays with baseDelay: 500, jitter: 0.2</span>
+<span class="c">// Attempt 1: ~500ms ± 20%  → 400–600ms</span>
+<span class="c">// Attempt 2: ~1000ms ± 20% → 800–1200ms</span>
+<span class="c">// Attempt 3: ~2000ms ± 20% → 1600–2400ms</span>
+<span class="c">// Attempt 4: ~4000ms ± 20% → 3200–4800ms</span>
+
+<span class="k">const</span> retrier = <span class="k">new</span> <span class="cl">SmartRetry</span>({
+  attempts: <span class="n">4</span>,
+  baseDelay: <span class="n">500</span>,
+  jitter: <span class="n">0.2</span>,
+  <span class="c">// Optional: custom retry condition</span>
+  retryOn: (err) => err.statusCode >= <span class="n">500</span>,
+});</pre></div></div>
+    </div>
+
+    <!-- Quick start page -->
+    <div class="page" id="page-quickstart">
+      <h1 class="page-title">Quick start</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">Get all three modules working in under 5 minutes.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="qs-install">1. Install</h2>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre>npm install rezilia</pre></div></div>
+
+      <h2 class="h2" id="qs-cache">2. Prevent cache stampedes</h2>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartCache</span> } <span class="k">from</span> <span class="s">'rezilia/cache'</span>;
+
+<span class="k">const</span> cache = <span class="k">new</span> <span class="cl">SmartCache</span>({
+  defaultTtl: <span class="n">60_000</span>,
+  staleWhileRevalidate: <span class="k">true</span>,
+  jitterFactor: <span class="n">0.1</span>,
+});
+
+<span class="c">// In your route handler:</span>
+<span class="k">const</span> user = <span class="k">await</span> cache.<span class="f">get</span>(<span class="s">`user:<span class="s">${req.params.id}</span>`</span>, () =>
+  db.<span class="f">findUser</span>(req.params.id)
+);</pre></div></div>
+
+      <h2 class="h2" id="qs-logger">3. Add request context logging</h2>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartLogger</span>, requestLogger } <span class="k">from</span> <span class="s">'rezilia/logger'</span>;
+<span class="k">import</span> express <span class="k">from</span> <span class="s">'express'</span>;
+
+<span class="k">const</span> app = <span class="f">express</span>();
+<span class="k">const</span> logger = <span class="k">new</span> <span class="cl">SmartLogger</span>({ serviceName: <span class="s">'api'</span> });
+app.<span class="f">use</span>(<span class="f">requestLogger</span>(logger)); <span class="c">// requestId in every log automatically</span>
+
+app.<span class="f">get</span>(<span class="s">'/users/:id'</span>, <span class="k">async</span> (req, res) => {
+  logger.<span class="f">info</span>(<span class="s">'Fetching user'</span>); <span class="c">// includes requestId automatically</span>
+  <span class="k">const</span> user = <span class="k">await</span> db.<span class="f">getUser</span>(req.params.id);
+  res.<span class="f">json</span>(user);
+});</pre></div></div>
+
+      <h2 class="h2" id="qs-retry">4. Add circuit breaker for external calls</h2>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">import</span> { <span class="cl">SmartRetry</span> } <span class="k">from</span> <span class="s">'rezilia/retry'</span>;
+
+<span class="k">const</span> retrier = <span class="k">new</span> <span class="cl">SmartRetry</span>({
+  attempts: <span class="n">5</span>,
+  baseDelay: <span class="n">500</span>,
+  jitter: <span class="n">0.2</span>,
+  circuitBreaker: { threshold: <span class="n">5</span>, resetAfter: <span class="n">30_000</span> },
+});
+
+<span class="c">// Wrap any external call:</span>
+<span class="k">const</span> result = <span class="k">await</span> retrier.<span class="f">execute</span>(() => stripe.<span class="f">charges</span>.<span class="f">create</span>(params));</pre></div></div>
+    </div>
+
+    <!-- Install page -->
+    <div class="page" id="page-install">
+      <h1 class="page-title">Installation</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">rezilia requires Node.js ≥ 18 and has zero runtime dependencies.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="inst-npm">Package managers</h2>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="c"># npm</span>
+npm install rezilia
+
+<span class="c"># pnpm</span>
+pnpm add rezilia
+
+<span class="c"># yarn</span>
+yarn add rezilia
+
+<span class="c"># bun</span>
+bun add rezilia</pre></div></div>
+
+      <h2 class="h2" id="inst-tsconfig">TypeScript config</h2>
+      <p>Add these to your <code class="ic">tsconfig.json</code> for best results:</p>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">json</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre>{
+  <span class="s">"compilerOptions"</span>: {
+    <span class="s">"strict"</span>: <span class="k">true</span>,
+    <span class="s">"target"</span>: <span class="s">"ES2022"</span>,
+    <span class="s">"moduleResolution"</span>: <span class="s">"bundler"</span>
+  }
+}</pre></div></div>
+
+      <h2 class="h2" id="inst-esm">ESM / CJS</h2>
+      <p>rezilia ships both ESM and CJS builds. Your bundler or Node.js will pick the right one automatically via package exports.</p>
+    </div>
+
+    <!-- API Reference page -->
+    <div class="page" id="page-api">
+      <h1 class="page-title">API Reference</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">Full API surface for all three modules.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="api-cache">SmartCache</h2>
+      <h3 class="h3">Constructor</h3>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">new</span> <span class="cl">SmartCache</span>(options: {
+  defaultTtl: <span class="t">number</span>;              <span class="c">// ms — required</span>
+  staleWhileRevalidate?: <span class="t">boolean</span>;  <span class="c">// default: false</span>
+  jitterFactor?: <span class="t">number</span>;           <span class="c">// 0–1, default: 0</span>
+  maxSize?: <span class="t">number</span>;                 <span class="c">// max entries, default: unlimited</span>
+})</pre></div></div>
+
+      <h3 class="h3">Methods</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>Singleflight / stampede prevention</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>Stale-While-Revalidate</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>TTL jitter</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>Async context propagation</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>Auto secret redaction</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>Circuit breaker</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="partial">partial</span></td></tr>
-          <tr><td>Per-attempt timeout</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
-          <tr><td>Zero runtime dependencies</td><td class="highlight-col"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>get(key, fetcher, ttl?)</td><td>Get from cache. Runs fetcher on miss (singleflight).</td></tr>
+          <tr><td>set(key, value, ttl?)</td><td>Set a value directly.</td></tr>
+          <tr><td>del(key)</td><td>Delete a key.</td></tr>
+          <tr><td>has(key)</td><td>Check if key exists and is fresh.</td></tr>
+          <tr><td>clear()</td><td>Remove all entries.</td></tr>
+          <tr><td>size()</td><td>Current number of entries.</td></tr>
         </tbody>
-      </table>
-    </div>
-  </section>
+      </table></div>
 
-  <section class="section">
-    <div class="section-label">Requirements</div>
-    <h2>Runtime support</h2>
-    <div class="req-grid">
-      <div class="req-card"><div class="req-runtime">Node.js</div><div class="req-version">≥ 18.0.0</div></div>
-      <div class="req-card"><div class="req-runtime">Bun</div><div class="req-version">≥ 1.0.0</div></div>
-      <div class="req-card"><div class="req-runtime">TypeScript</div><div class="req-version">≥ 5.0 (optional)</div></div>
+      <h2 class="h2" id="api-logger">SmartLogger</h2>
+      <h3 class="h3">Constructor</h3>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">new</span> <span class="cl">SmartLogger</span>(options: {
+  serviceName: <span class="t">string</span>;
+  level?: <span class="s">'debug'</span> | <span class="s">'info'</span> | <span class="s">'warn'</span> | <span class="s">'error'</span>;  <span class="c">// default: 'info'</span>
+  redactedFields?: <span class="t">string</span>[];  <span class="c">// merged with defaults</span>
+  output?: (line: <span class="t">string</span>) => <span class="t">void</span>;  <span class="c">// default: process.stdout</span>
+})</pre></div></div>
+
+      <h3 class="h3">Methods</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>debug(msg, meta?)</td><td>Debug-level structured log.</td></tr>
+          <tr><td>info(msg, meta?)</td><td>Info-level structured log.</td></tr>
+          <tr><td>warn(msg, meta?)</td><td>Warning-level structured log.</td></tr>
+          <tr><td>error(msg, meta?)</td><td>Error-level structured log.</td></tr>
+          <tr><td>runWithContext(ctx, fn)</td><td>Run fn with context bound to async scope.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2 class="h2" id="api-retry">SmartRetry</h2>
+      <h3 class="h3">Constructor</h3>
+      <div class="cb"><div class="cb-header"><span class="cb-lang">ts</span><button class="cb-copy" onclick="cbcopy(this)">Copy</button></div><div class="cb-body"><pre><span class="k">new</span> <span class="cl">SmartRetry</span>(options: {
+  attempts: <span class="t">number</span>;
+  baseDelay?: <span class="t">number</span>;     <span class="c">// ms, default: 1000</span>
+  maxDelay?: <span class="t">number</span>;      <span class="c">// ms cap, default: 30000</span>
+  jitter?: <span class="t">number</span>;        <span class="c">// 0–1, default: 0.1</span>
+  timeout?: <span class="t">number</span>;       <span class="c">// per-attempt ms, default: none</span>
+  retryOn?: (err: <span class="t">Error</span>) => <span class="t">boolean</span>;
+  circuitBreaker?: {
+    threshold: <span class="t">number</span>;
+    resetAfter: <span class="t">number</span>;   <span class="c">// ms</span>
+    halfOpenSuccesses?: <span class="t">number</span>;  <span class="c">// default: 1</span>
+  };
+})</pre></div></div>
+
+      <h3 class="h3">Methods</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute(fn)</td><td>Run fn with retry + circuit breaker logic.</td></tr>
+          <tr><td>getState()</td><td>Returns 'CLOSED' | 'OPEN' | 'HALF_OPEN'.</td></tr>
+          <tr><td>reset()</td><td>Manually reset the circuit breaker to CLOSED.</td></tr>
+        </tbody>
+      </table></div>
     </div>
-  </section>
+
+    <!-- Changelog page -->
+    <div class="page" id="page-changelog">
+      <h1 class="page-title">Changelog</h1>
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">All notable changes to rezilia.</p>
+      <hr class="rule">
+
+      <h2 class="h2" id="cl-01">v0.1.0 — Initial release</h2>
+      <p><strong>SmartCache</strong></p>
+      <ul>
+        <li>Singleflight per-key deduplication</li>
+        <li>Stale-while-revalidate background refresh</li>
+        <li>TTL jitter to prevent mass simultaneous expiry</li>
+        <li>LRU eviction via <code class="ic">maxSize</code></li>
+      </ul>
+      <p><strong>SmartLogger</strong></p>
+      <ul>
+        <li>AsyncLocalStorage-based context propagation</li>
+        <li>Auto-redaction of sensitive fields</li>
+        <li>Express <code class="ic">requestLogger</code> middleware</li>
+        <li>Structured JSON output</li>
+      </ul>
+      <p><strong>SmartRetry</strong></p>
+      <ul>
+        <li>Exponential backoff with configurable jitter</li>
+        <li>Per-attempt timeouts</li>
+        <li>Three-state circuit breaker (CLOSED → OPEN → HALF_OPEN)</li>
+        <li>Custom <code class="ic">retryOn</code> predicate</li>
+      </ul>
+    </div>
+
+  </main>
+
+  <!-- ── Right TOC sidebar ──────────────────────────────── -->
+  <aside id="toc">
+    <div class="toc-title">On this page</div>
+    <div id="toc-links"></div>
+  </aside>
+
 </div>
-
-<footer>
-  <div class="footer-inner">
-    <div class="footer-brand"><span class="shield">🛡️</span> rezilia</div>
-    <div class="footer-links">
-      <a href="https://github.com/Work-AbhishekMajumdar/rezilia" target="_blank">GitHub</a>
-      <a href="https://www.npmjs.com/package/rezilia" target="_blank">npm</a>
-      <a href="https://github.com/Work-AbhishekMajumdar/rezilia/issues" target="_blank">Issues</a>
-    </div>
-    <div class="footer-copy">MIT License · Built by Abhishek Majumdar</div>
-  </div>
-</footer>
 
 <script>
-function switchTab(pkg){document.querySelectorAll('.install-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.install-pane').forEach(p=>p.classList.remove('active'));document.querySelector(`.install-tab[onclick="switchTab('${pkg}')"]`).classList.add('active');document.getElementById('pane-'+pkg).classList.add('active')}
-function copyInstall(btn,text){navigator.clipboard.writeText(text).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000)})}
-function copyCode(btn){const pre=btn.closest('.code-block').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000)})}
-function toggleTheme(){const r=document.documentElement,c=r.getAttribute('data-theme');if(c==='dark')r.setAttribute('data-theme','light');else if(c==='light')r.removeAttribute('data-theme');else r.setAttribute('data-theme','dark')}
+// ── Page navigation ─────────────────────────────────────
+const pages = {
+  intro:       { el: null, toc: [
+    { id: 'intro-intro',    label: 'Introduction' },
+    { id: 'intro-features', label: 'Features' },
+    { id: 'intro-install',  label: 'Installation' },
+    { id: 'intro-requirements', label: 'Requirements' },
+    { id: 'intro-modules',  label: 'Modules' },
+  ]},
+  install:     { el: null, toc: [
+    { id: 'inst-npm',      label: 'Package managers' },
+    { id: 'inst-tsconfig', label: 'TypeScript config' },
+    { id: 'inst-esm',      label: 'ESM / CJS' },
+  ]},
+  quickstart:  { el: null, toc: [
+    { id: 'qs-install', label: '1. Install' },
+    { id: 'qs-cache',   label: '2. SmartCache' },
+    { id: 'qs-logger',  label: '3. SmartLogger' },
+    { id: 'qs-retry',   label: '4. SmartRetry' },
+  ]},
+  cache:       { el: null, toc: [
+    { id: 'cache-problem',     label: 'The problem' },
+    { id: 'cache-singleflight', label: 'Singleflight' },
+    { id: 'cache-swr',         label: 'Stale-while-revalidate' },
+    { id: 'cache-jitter',      label: 'TTL jitter' },
+  ]},
+  logger:      { el: null, toc: [
+    { id: 'logger-problem', label: 'The problem' },
+    { id: 'logger-context', label: 'Request context' },
+    { id: 'logger-redaction', label: 'Auto-redaction' },
+  ]},
+  retry:       { el: null, toc: [
+    { id: 'retry-circuit', label: 'Circuit breaker' },
+    { id: 'retry-backoff', label: 'Exponential backoff' },
+  ]},
+  api:         { el: null, toc: [
+    { id: 'api-cache',  label: 'SmartCache' },
+    { id: 'api-logger', label: 'SmartLogger' },
+    { id: 'api-retry',  label: 'SmartRetry' },
+  ]},
+  changelog:   { el: null, toc: [
+    { id: 'cl-01', label: 'v0.1.0' },
+  ]},
+};
+
+// resolve DOM refs
+for (const [k, v] of Object.entries(pages)) {
+  v.el = document.getElementById('page-' + k);
+}
+
+let currentPage = 'intro';
+
+function show(name) {
+  if (!pages[name]) return;
+  // hide all
+  for (const [k, v] of Object.entries(pages)) {
+    v.el.classList.remove('active');
+  }
+  // show target
+  pages[name].el.classList.add('active');
+  currentPage = name;
+  // update nav
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll(`.nav-link[onclick*="'${name}'"]`).forEach(el => el.classList.add('active'));
+  // update TOC
+  buildToc(name);
+  // scroll main to top
+  document.getElementById('main').scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
+function buildToc(name) {
+  const tocEl = document.getElementById('toc-links');
+  const items = pages[name]?.toc || [];
+  tocEl.innerHTML = items.map(t =>
+    `<a class="toc-link" href="#${t.id}" onclick="scrollTo('${t.id}')">${t.label}</a>`
+  ).join('');
+}
+
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Install tabs ─────────────────────────────────────────
+function tab(btn, paneId) {
+  const wrap = btn.closest('.install-box');
+  wrap.querySelectorAll('.itab').forEach(b => b.classList.remove('active'));
+  wrap.querySelectorAll('.ipane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+// ── Copy buttons ─────────────────────────────────────────
+function cp(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+function cbcopy(btn) {
+  const code = btn.closest('.cb').querySelector('pre').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+// ── Theme toggle ─────────────────────────────────────────
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-btn').textContent = isDark ? '🌙' : '☀';
+  try { localStorage.setItem('theme', isDark ? 'light' : 'dark'); } catch(e) {}
+}
+
+// init
+try {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.theme-btn').textContent = saved === 'dark' ? '☀' : '🌙';
+  }
+} catch(e) {}
+
+buildToc('intro');
 </script>
 </body>
 </html>
