@@ -1,65 +1,36 @@
 {
   "name": "rezilia",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "🛡️ The ultimate backend resilience toolkit — Smart Cache (stampede prevention), Smart Logger (async context), Smart Retry (circuit breaker). Works with npm, yarn, pnpm, and bun.",
   "author": "Abhishek Majumdar <abhishek.majumdar@buildambit.com>",
   "license": "MIT",
   "homepage": "https://work-abhishekmajumdar.github.io/rezilia/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Work-AbhishekMajumdar/rezilia.git"
+    "url": "git+https://github.com/abhishek-majumdar/rezilia.git"
   },
   "bugs": {
-    "url": "https://github.com/Work-AbhishekMajumdar/rezilia/issues"
+    "url": "https://github.com/abhishek-majumdar/rezilia/issues"
   },
   "keywords": [
-    "cache",
-    "stampede",
-    "singleflight",
-    "logger",
-    "retry",
-    "circuit-breaker",
-    "backend",
-    "resilience",
-    "async-context",
-    "rate-limit",
-    "exponential-backoff",
-    "typescript",
-    "nodejs",
-    "bun"
+    "cache", "stampede", "singleflight", "logger", "retry",
+    "circuit-breaker", "backend", "resilience", "async-context",
+    "rate-limit", "exponential-backoff", "typescript", "nodejs", "bun"
   ],
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./cache": {
-      "types": "./dist/cache/index.d.ts",
-      "import": "./dist/esm/cache/index.js",
-      "require": "./dist/cjs/cache/index.js"
-    },
-    "./logger": {
-      "types": "./dist/logger/index.d.ts",
-      "import": "./dist/esm/logger/index.js",
-      "require": "./dist/cjs/logger/index.js"
-    },
-    "./retry": {
-      "types": "./dist/retry/index.d.ts",
-      "import": "./dist/esm/retry/index.js",
-      "require": "./dist/cjs/retry/index.js"
-    }
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/esm/index.js", "require": "./dist/cjs/index.js" },
+    "./cache": { "types": "./dist/cache/index.d.ts", "import": "./dist/esm/cache/index.js", "require": "./dist/cjs/cache/index.js" },
+    "./logger": { "types": "./dist/logger/index.d.ts", "import": "./dist/esm/logger/index.js", "require": "./dist/cjs/logger/index.js" },
+    "./retry": { "types": "./dist/retry/index.d.ts", "import": "./dist/esm/retry/index.js", "require": "./dist/cjs/retry/index.js" }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
-  ],
+  "browser": "./dist/browser/rezilia.min.js",
+  "unpkg": "./dist/browser/rezilia.min.js",
+  "jsdelivr": "./dist/browser/rezilia.min.js",
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
@@ -83,15 +54,7 @@
     "typescript": "^5.4.0",
     "vitest": "^1.0.0"
   },
-  "peerDependencies": {
-    "ioredis": ">=5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "ioredis": {
-      "optional": true
-    }
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "peerDependencies": { "ioredis": ">=5.0.0" },
+  "peerDependenciesMeta": { "ioredis": { "optional": true } },
+  "engines": { "node": ">=18.0.0" }
 }
