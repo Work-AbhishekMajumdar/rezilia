@@ -4,7 +4,7 @@
   "description": "🛡️ The ultimate backend resilience toolkit — Smart Cache (stampede prevention), Smart Logger (async context), Smart Retry (circuit breaker). Works with npm, yarn, pnpm, and bun.",
   "author": "Abhishek Majumdar <abhishek.majumdar@buildambit.com>",
   "license": "MIT",
-  "homepage": "https://github.com/Work-AbhishekMajumdar/rezilia#readme",
+  "homepage": "https://work-abhishekmajumdar.github.io/rezilia/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Work-AbhishekMajumdar/rezilia.git"
