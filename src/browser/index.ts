@@ -37,17 +37,13 @@ export {
   RetryExhaustedError,
   TimeoutError,
   CircuitOpenError,
-} from './retry/index.js';
+} from '../retry/index.js';
 
-export type {
-  SmartRetryOptions,
-  CircuitBreakerOptions,
-  CircuitState,
-} from './retry/index.js';
+export type { SmartRetryOptions, CircuitBreakerOptions, CircuitState } from '../retry/index.js';
 
 // Cache — MemoryStore only (no Redis in browser)
-export { SmartCache, MemoryStore } from './cache/index.js';
-export type { SmartCacheOptions, GetOptions } from './cache/index.js';
+export { SmartCache, MemoryStore } from '../cache/index.js';
+export type { SmartCacheOptions, GetOptions } from '../cache/index.js';
 
 // Logger — browser-compatible version (no AsyncLocalStorage)
 export { BrowserLogger } from './browser-logger.js';

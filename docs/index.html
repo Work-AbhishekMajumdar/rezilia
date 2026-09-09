@@ -1402,6 +1402,202 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ── CDN section ─────────────────────────────────────────────── */
+        .note-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            padding: 0.85rem 1rem;
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            border-radius: 8px;
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+            margin: 1.25rem 0;
+            line-height: 1.55;
+        }
+
+        .note-banner.warning-note {
+            background: var(--warning-soft);
+            border-color: rgba(217, 119, 6, 0.3);
+        }
+
+        .cdn-global-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.75rem 0 1.25rem;
+        }
+
+        .cdn-global-chip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        /* ── BrowserLogger animated live-demo console ────────────────── */
+        .bl-demo-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bl-demo-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.85rem;
+        }
+
+        .bl-demo-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .bl-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid var(--accent-border);
+        }
+
+        .bl-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .bl-status-pill.bl-playing .bl-status-dot {
+            animation: blPulseDot 1s infinite;
+        }
+
+        @keyframes blPulseDot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+
+        .bl-console {
+            position: relative;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            min-height: 210px;
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            scrollbar-width: thin;
+        }
+
+        .bl-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.5rem;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+        }
+
+        .bl-line.bl-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .bl-time {
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
+        .bl-level-tag {
+            flex-shrink: 0;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            letter-spacing: 0.02em;
+        }
+
+        .bl-level-tag.lvl-debug { background: rgba(148, 163, 184, 0.18); color: #94a3b8; }
+        .bl-level-tag.lvl-info  { background: rgba(59, 130, 246, 0.18); color: #60a5fa; }
+        .bl-level-tag.lvl-warn  { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+        .bl-level-tag.lvl-error { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+
+        .bl-service {
+            flex-shrink: 0;
+            color: #38bdf8;
+        }
+
+        .bl-msg {
+            color: #e2e8f0;
+        }
+
+        .bl-fields {
+            color: #64748b;
+        }
+
+        .bl-fields .bl-redacted {
+            color: #f87171;
+            font-weight: 600;
+        }
+
+        .bl-cursor {
+            display: inline-block;
+            width: 7px;
+            height: 14px;
+            background: var(--accent);
+            margin-left: 2px;
+            animation: blBlink 0.9s step-start infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blBlink {
+            50% { opacity: 0; }
+        }
+
+        .bl-demo-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .bl-demo-hint {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -1429,6 +1625,7 @@
             <ul class="nav-list">
                 <li><a href="#overview" class="nav-item-link">Overview</a></li>
                 <li><a href="#installation" class="nav-item-link">Installation</a></li>
+                <li><a href="#cdn" class="nav-item-link">Play CDN </a></li>
                 <li><a href="#problem-solved" class="nav-item-link">Problem it Solves</a></li>
             </ul>
         </div>
@@ -1481,6 +1678,22 @@
                         <li><a href="#attr-log-redactKeys">redactKeys</a></li>
                     </ul>
                 </li>
+
+                <!-- BrowserLogger Accordion (Closed by default) -->
+                <li class="nav-accordion" id="accordionBrowserLogger">
+                    <div class="nav-item-link" onclick="toggleAccordion('accordionBrowserLogger')">
+                        <span>📟 BrowserLogger</span>
+                        <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <ul class="nav-sub-list">
+                        <li><a href="#bl-live-demo">▶ Live Animated Demo</a></li>
+                        <li><a href="#attr-bl-service">service</a></li>
+                        <li><a href="#attr-bl-level">level</a></li>
+                        <li><a href="#attr-bl-pretty">pretty</a></li>
+                        <li><a href="#attr-bl-redact">redact</a></li>
+                        <li><a href="#attr-bl-timeFormat">timeFormat</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
 
@@ -1504,6 +1717,7 @@
                     <span class="hero-pill pill-success">✓ 0 Runtime Dependencies</span>
                     <span class="hero-pill">📦 Dual ESM + CJS</span>
                     <span class="hero-pill">🛡️ 100% TypeScript</span>
+                    <span class="hero-pill pill-accent">🌐 CDN / Script Tag Ready</span>
                 </div>
                 
                 <h1>rezilia</h1>
@@ -1692,6 +1906,81 @@ logger.<span class="fn">runWithContext</span>({ requestId: req.id }, <span class
   timeout: <span class="num">5_000</span>,
   circuitBreaker: { threshold: <span class="num">5</span>, resetAfter: <span class="num">30_000</span> }
 });</code></pre>
+            </div>
+        </section>
+
+        <!-- SECTION: Play CDN -->
+        <section id="cdn">
+            <h2>Play CDN </h2>
+            <p>No bundler, no <code>npm install</code>, no build step. Drop a single <code>&lt;script&gt;</code> tag into any plain HTML page and rezilia attaches itself to <code>window.rezilia</code> &mdash; ready to use immediately.</p>
+
+            <div class="install-box">
+                <div class="install-header">
+                    <div class="install-tabs">
+                        <button class="install-tab-btn active" onclick="switchCdnTab('jsdelivr')">jsDelivr</button>
+                        <button class="install-tab-btn" onclick="switchCdnTab('unpkg')">unpkg</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyCdnCmd()">
+                        <span id="cdnCopyLabel">Copy</span>
+                    </button>
+                </div>
+                <div class="install-body">
+                    <span id="cdnCmdText">&lt;script src="https://cdn.jsdelivr.net/npm/rezilia/dist/browser/rezilia.min.js"&gt;&lt;/script&gt;</span>
+                </div>
+            </div>
+
+            <div class="note-banner">
+                <span>💡</span>
+                <span>Use <code>rezilia.min.js</code> (~7&nbsp;KB gzipped) in production. Swap to the unminified <code>rezilia.js</code> while debugging &mdash; both expose the exact same <code>window.rezilia</code> global, built straight from <code>src/browser/index.ts</code> via the dedicated IIFE target in <code>tsup.config.ts</code>.</span>
+            </div>
+
+            <h3>Quick Start (Plain HTML)</h3>
+            <div class="code-container">
+                <button class="code-copy-floating" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="kw">&lt;script</span> <span class="prop">src</span>=<span class="str">"https://cdn.jsdelivr.net/npm/rezilia/dist/browser/rezilia.min.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;script&gt;</span>
+  <span class="kw">const</span> { SmartRetry, SmartCache, BrowserLogger } = window.rezilia;
+
+  <span class="cm">// Structured logging — no bundler required</span>
+  <span class="kw">const</span> logger = <span class="kw">new</span> <span class="fn">BrowserLogger</span>({ service: <span class="str">'landing-page'</span>, pretty: <span class="kw">true</span> });
+  logger.<span class="fn">setContext</span>({ userId: <span class="str">'u_42'</span> });
+
+  <span class="cm">// Retry with exponential backoff + circuit breaker</span>
+  <span class="kw">const</span> retry = <span class="kw">new</span> <span class="fn">SmartRetry</span>({ attempts: <span class="num">3</span>, baseDelay: <span class="num">500</span> });
+
+  <span class="cm">// Singleflight cache — dedupes concurrent fetches, in-memory</span>
+  <span class="kw">const</span> cache = <span class="kw">new</span> <span class="fn">SmartCache</span>({ defaultTtl: <span class="num">60_000</span> });
+
+  <span class="kw">async function</span> <span class="fn">loadUser</span>() {
+    logger.<span class="fn">info</span>(<span class="str">'Fetching user profile'</span>);
+    <span class="kw">const</span> user = <span class="kw">await</span> cache.<span class="fn">get</span>(<span class="str">'user:42'</span>, () =&gt;
+      retry.<span class="fn">execute</span>(() =&gt; fetch(<span class="str">'/api/user/42'</span>).then(r =&gt; r.json()))
+    );
+    logger.<span class="fn">info</span>(<span class="str">'User loaded'</span>, { user });
+  }
+
+  <span class="fn">loadUser</span>();
+<span class="kw">&lt;/script&gt;</span></code></pre>
+            </div>
+
+            <h3>What's Included in the CDN Build</h3>
+            <p>The browser bundle only ships APIs that run without Node.js internals (no <code>AsyncLocalStorage</code>, no <code>ioredis</code>). It is built from <code>src/browser/index.ts</code>, which re-exports a browser-safe subset of the toolkit:</p>
+
+            <div class="cdn-global-list">
+                <span class="cdn-global-chip">SmartRetry</span>
+                <span class="cdn-global-chip">retry</span>
+                <span class="cdn-global-chip">CircuitBreaker</span>
+                <span class="cdn-global-chip">RetryExhaustedError</span>
+                <span class="cdn-global-chip">TimeoutError</span>
+                <span class="cdn-global-chip">CircuitOpenError</span>
+                <span class="cdn-global-chip">SmartCache</span>
+                <span class="cdn-global-chip">MemoryStore</span>
+                <span class="cdn-global-chip">BrowserLogger</span>
+            </div>
+
+            <div class="note-banner warning-note">
+                <span>⚠️</span>
+                <span><code>SmartLogger</code> (Node's <code>AsyncLocalStorage</code>-based logger) and the Redis-backed <code>store</code> option for <code>SmartCache</code> are <strong>not</strong> part of the CDN bundle &mdash; they depend on Node.js APIs unavailable in a browser. Use <a href="#browserlogger">BrowserLogger</a> instead for script-tag projects.</span>
             </div>
         </section>
 
@@ -2180,6 +2469,112 @@ logger.<span class="fn">info</span>(<span class="str">'User auth'</span>, { apiK
             </div>
         </section>
 
+        <!-- SECTION: BROWSERLOGGER (CDN) — ANIMATED LIVE DEMO -->
+        <section id="browserlogger">
+            <h2>4. 📟 BrowserLogger &amp; Live Demo <span style="font-size:0.65rem; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-border); margin-left:0.25rem;">CDN</span></h2>
+            <p>The drop-in logger for plain HTML/JS projects &mdash; a lightweight sibling of <code>SmartLogger</code> that swaps <code>AsyncLocalStorage</code> for a simple context object and <code>process.stdout</code> for <code>console.*</code>. Same structured-JSON output, same automatic secret redaction, zero Node.js dependency.</p>
+
+            <p>Watch exactly what appears in your browser console as each log call runs &mdash; press <strong>▶ Replay Animation</strong> to see it again:</p>
+
+            <!-- Animated console demo -->
+            <div class="bl-demo-wrap" id="bl-live-demo">
+                <div class="bl-demo-header">
+                    <div class="bl-demo-title">
+                        <span>🖥️</span>
+                        <span>Browser DevTools Console — Simulated Output</span>
+                    </div>
+                    <span class="bl-status-pill" id="blStatusPill"><span class="bl-status-dot"></span><span id="blStatusText">Ready</span></span>
+                </div>
+
+                <div class="bl-console" id="blConsole"></div>
+
+                <div class="bl-demo-footer">
+                    <span class="bl-demo-hint">Simulates <code>logger.debug/info/warn/error(...)</code> calls firing in real time, including automatic redaction.</span>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn-action" id="btnBlReplay" onclick="playBrowserLoggerDemo()">▶ Replay Animation</button>
+                        <button class="btn-secondary" onclick="resetBrowserLoggerDemo()">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Sample Code</h3>
+            <div class="code-container">
+                <button class="code-copy-floating" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="kw">import</span> { BrowserLogger } <span class="kw">from</span> <span class="str">'rezilia/browser'</span>; <span class="cm">// or window.rezilia via CDN</span>
+
+<span class="kw">const</span> logger = <span class="kw">new</span> <span class="fn">BrowserLogger</span>({
+  service: <span class="str">'checkout-widget'</span>,
+  pretty: <span class="kw">true</span>,          <span class="cm">// human-readable console output (default: JSON)</span>
+  timeFormat: <span class="str">'time'</span>,  <span class="cm">// 'iso' | 'full' | 'time'</span>
+});
+
+<span class="cm">// Context merges into every subsequent log call</span>
+logger.<span class="fn">setContext</span>({ requestId: <span class="str">'req_981a'</span>, userId: <span class="str">'u_42'</span> });
+
+logger.<span class="fn">debug</span>(<span class="str">'Widget mounted'</span>);
+logger.<span class="fn">info</span>(<span class="str">'Fetching cart'</span>, { cartId: <span class="str">'cart_77'</span> });
+logger.<span class="fn">warn</span>(<span class="str">'Coupon expired'</span>, { code: <span class="str">'SAVE10'</span> });
+
+<span class="cm">// Automatic secret redaction — sensitive keys become '***'</span>
+logger.<span class="fn">info</span>(<span class="str">'User authenticated'</span>, { token: <span class="str">'sk_live_990182'</span>, password: <span class="str">'hunter2'</span> });
+<span class="cm">// → { ..., "token": "***", "password": "***" }</span>
+
+logger.<span class="fn">error</span>(<span class="str">'Payment failed'</span>, { reason: <span class="str">'card_declined'</span> });</code></pre>
+            </div>
+
+            <h3>BrowserLogger Options Reference</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Attribute</th>
+                            <th>Type</th>
+                            <th>Default</th>
+                            <th>Allowed Values</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="attr-bl-service">
+                            <td><code>service</code></td>
+                            <td><span class="type-badge">string</span></td>
+                            <td><code>'app'</code></td>
+                            <td>e.g. <code>'checkout-widget'</code></td>
+                            <td>Service name stamped onto every log entry.</td>
+                        </tr>
+                        <tr id="attr-bl-level">
+                            <td><code>level</code></td>
+                            <td><span class="type-badge">LogLevel</span></td>
+                            <td><code>'info'</code></td>
+                            <td><code>'debug' | 'info' | 'warn' | 'error'</code></td>
+                            <td>Minimum level emitted — anything below this threshold is silently dropped.</td>
+                        </tr>
+                        <tr id="attr-bl-pretty">
+                            <td><code>pretty</code></td>
+                            <td><span class="type-badge">boolean</span></td>
+                            <td><code>false</code></td>
+                            <td><code>true</code> | <code>false</code></td>
+                            <td>When <code>true</code>, emits human-readable <code>[time] [LEVEL] [service] message</code> lines instead of raw JSON.</td>
+                        </tr>
+                        <tr id="attr-bl-redact">
+                            <td><code>redact</code></td>
+                            <td><span class="type-badge">string[]</span></td>
+                            <td><code>[password, token, secret, authorization]</code></td>
+                            <td>Array of field names</td>
+                            <td>Field names replaced with <code>'***'</code> before being logged, matched case-insensitively.</td>
+                        </tr>
+                        <tr id="attr-bl-timeFormat">
+                            <td><code>timeFormat</code></td>
+                            <td><span class="type-badge">string</span></td>
+                            <td><code>'iso'</code></td>
+                            <td><code>'iso' | 'full' | 'time'</code></td>
+                            <td>Timestamp style used in pretty mode — ISO string, full date-time, or local time only.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section id="tree-shaking">
             <h2>🌳 Tree-Shakeable Imports</h2>
             <p>rezilia is engineered for minimal bundle footprint. You can import only the specific sub-modules your service requires:</p>
@@ -2314,6 +2709,24 @@ logger.<span class="fn">info</span>(<span class="str">'User auth'</span>, { apiK
                     </div>
                 </a>
 
+                <!-- CDN Card -->
+                <a href="https://www.jsdelivr.com/package/npm/rezilia" target="_blank" rel="noopener" class="resource-card">
+                    <div>
+                        <div class="resource-card-header">
+                            <div class="resource-icon-wrap">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            </div>
+                            <span class="resource-badge-tag">CDN Build</span>
+                        </div>
+                        <div class="resource-card-title">jsDelivr / unpkg Script Tag</div>
+                        <div class="resource-card-desc">No-build browser bundle exposing <code>window.rezilia</code> — SmartRetry, SmartCache &amp; BrowserLogger for plain HTML/JS.</div>
+                    </div>
+                    <div class="resource-card-footer">
+                        <span>dist/browser/rezilia.min.js</span>
+                        <span class="resource-link-label">View on jsDelivr &rarr;</span>
+                    </div>
+                </a>
+
                 <!-- GitHub Pages Card -->
                 <a href="https://work-abhishekmajumdar.github.io/rezilia/" target="_blank" rel="noopener" class="resource-card">
                     <div>
@@ -2359,11 +2772,14 @@ logger.<span class="fn">info</span>(<span class="str">'User auth'</span>, { apiK
         <ul class="toc-links">
             <li><a href="#overview">Overview</a></li>
             <li><a href="#installation">Installation</a></li>
+            <li><a href="#cdn">Play CDN</a></li>
             <li><a href="#problem-solved">Problem it Solves</a></li>
             <li><a href="#smartretry">SmartRetry &amp; Circuit</a></li>
             <li><a href="#smartcache">SmartCache &amp; Singleflight</a></li>
             <li><a href="#sf-visual-diagram">&mdash; Singleflight Diagram</a></li>
             <li><a href="#smartlogger">SmartLogger &amp; Context</a></li>
+            <li><a href="#browserlogger">BrowserLogger (CDN)</a></li>
+            <li><a href="#bl-live-demo">&mdash; Live Animated Demo</a></li>
             <li><a href="#tree-shaking">Tree-Shaking</a></li>
             <li><a href="#comparison">Comparison Matrix</a></li>
             <li><a href="#links">Project Resources</a></li>
@@ -2418,6 +2834,29 @@ logger.<span class="fn">info</span>(<span class="str">'User auth'</span>, { apiK
         const text = installCommands[activePm];
         copyToClipboard(text);
         const label = document.getElementById('installCopyLabel');
+        label.innerText = 'Copied!';
+        setTimeout(() => label.innerText = 'Copy', 1500);
+    }
+
+    // 2b. CDN Script Tag Tabs (jsDelivr / unpkg)
+    const cdnCommands = {
+        jsdelivr: '<script src="https://cdn.jsdelivr.net/npm/rezilia/dist/browser/rezilia.min.js"></' + 'script>',
+        unpkg: '<script src="https://unpkg.com/rezilia/dist/browser/rezilia.min.js"></' + 'script>'
+    };
+    let activeCdn = 'jsdelivr';
+
+    function switchCdnTab(provider) {
+        activeCdn = provider;
+        const tabs = document.querySelectorAll('#cdn .install-tab-btn');
+        tabs.forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.toLowerCase() === provider);
+        });
+        document.getElementById('cdnCmdText').innerText = cdnCommands[provider];
+    }
+
+    function copyCdnCmd() {
+        copyToClipboard(cdnCommands[activeCdn]);
+        const label = document.getElementById('cdnCopyLabel');
         label.innerText = 'Copied!';
         setTimeout(() => label.innerText = 'Copy', 1500);
     }
@@ -2829,6 +3268,116 @@ logger.<span class="fn">info</span>(<span class="str">'User auth'</span>, { apiK
             document.getElementById(`nodeCaller${i}`).querySelector('rect').className.baseVal = 'sf-node-box';
         }
         document.getElementById('wireDbQuery').className.baseVal = 'dotted-wire';
+    }
+
+    // 7. BrowserLogger Animated Live Demo
+    const blLogSequence = [
+        { level: 'debug', msg: 'Widget mounted', fields: null },
+        { level: 'info',  msg: 'Fetching cart', fields: { cartId: 'cart_77' } },
+        { level: 'warn',  msg: 'Coupon expired', fields: { code: 'SAVE10' } },
+        { level: 'info',  msg: 'User authenticated', fields: { token: '***', password: '***' }, redacted: true },
+        { level: 'error', msg: 'Payment failed', fields: { reason: 'card_declined' } }
+    ];
+    let blPlaying = false;
+    let blTimers = [];
+
+    function blFormatTime() {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    }
+
+    function blFieldsToString(fields, redacted) {
+        if (!fields) return '';
+        return Object.entries(fields).map(([k, v]) => {
+            const isRedactedVal = redacted && v === '***';
+            return `${k}=${isRedactedVal ? `<span class="bl-redacted">***</span>` : v}`;
+        }).join(' ');
+    }
+
+    function blAppendCursor() {
+        const consoleEl = document.getElementById('blConsole');
+        if (!consoleEl) return;
+        const wrap = document.createElement('div');
+        wrap.id = 'blCursorLine';
+        wrap.innerHTML = '<span class="bl-cursor"></span>';
+        consoleEl.appendChild(wrap);
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function blRemoveCursor() {
+        const line = document.getElementById('blCursorLine');
+        if (line) line.remove();
+    }
+
+    function playBrowserLoggerDemo() {
+        if (blPlaying) return;
+        resetBrowserLoggerDemo();
+        blPlaying = true;
+
+        const pill = document.getElementById('blStatusPill');
+        const statusText = document.getElementById('blStatusText');
+        const replayBtn = document.getElementById('btnBlReplay');
+        if (!pill || !statusText || !replayBtn) return;
+
+        pill.classList.add('bl-playing');
+        statusText.innerText = 'Playing…';
+        replayBtn.disabled = true;
+
+        const consoleEl = document.getElementById('blConsole');
+        blAppendCursor();
+
+        blLogSequence.forEach((entry, i) => {
+            const t = setTimeout(() => {
+                blRemoveCursor();
+
+                const line = document.createElement('div');
+                line.className = 'bl-line';
+                const levelHtml = `<span class="bl-level-tag lvl-${entry.level}">${entry.level.toUpperCase()}</span>`;
+                const fieldsHtml = entry.fields ? `<span class="bl-fields">${blFieldsToString(entry.fields, entry.redacted)}</span>` : '';
+                line.innerHTML = `<span class="bl-time">[${blFormatTime()}]</span>${levelHtml}<span class="bl-service">[checkout-widget]</span><span class="bl-msg">${entry.msg}</span>${fieldsHtml}`;
+                consoleEl.appendChild(line);
+                requestAnimationFrame(() => line.classList.add('bl-visible'));
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+
+                if (i < blLogSequence.length - 1) {
+                    blAppendCursor();
+                } else {
+                    blPlaying = false;
+                    pill.classList.remove('bl-playing');
+                    statusText.innerText = 'Done';
+                    replayBtn.disabled = false;
+                }
+            }, i * 750 + 300);
+            blTimers.push(t);
+        });
+    }
+
+    function resetBrowserLoggerDemo() {
+        blTimers.forEach(t => clearTimeout(t));
+        blTimers = [];
+        blPlaying = false;
+        const consoleEl = document.getElementById('blConsole');
+        if (consoleEl) consoleEl.innerHTML = '';
+        const pill = document.getElementById('blStatusPill');
+        const statusText = document.getElementById('blStatusText');
+        const replayBtn = document.getElementById('btnBlReplay');
+        if (pill) pill.classList.remove('bl-playing');
+        if (statusText) statusText.innerText = 'Ready';
+        if (replayBtn) replayBtn.disabled = false;
+    }
+
+    // Autoplay once when the live demo first scrolls into view
+    const blDemoEl = document.getElementById('bl-live-demo');
+    if (blDemoEl && 'IntersectionObserver' in window) {
+        const blObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    playBrowserLoggerDemo();
+                    blObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.4 });
+        blObserver.observe(blDemoEl);
     }
 </script>
 

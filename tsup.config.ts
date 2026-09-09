@@ -22,7 +22,7 @@ export default defineConfig([
   // ── Browser CDN build (IIFE — exposes window.rezilia) ───────────────────
   {
     entry: {
-      'browser/rezilia': 'src/browser.ts',
+      'browser/rezilia': 'src/browser/index.ts',
     },
     format: ['iife'],
     globalName: 'rezilia',
@@ -40,7 +40,7 @@ export default defineConfig([
   // ── Browser CDN build — minified version ────────────────────────────────
   {
     entry: {
-      'browser/rezilia.min': 'src/browser.ts',
+      'browser/rezilia.min': 'src/browser/index.ts',
     },
     format: ['iife'],
     globalName: 'rezilia',
